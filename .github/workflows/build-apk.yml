@@ -7,11 +7,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: unzip -q "$(ls *.zip | head -1)" -d src
+      - run: unzip -q "$(ls -t *.zip | head -1)" -d src
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: '17' }
       - uses: gradle/actions/setup-gradle@v3
         with: { gradle-version: '8.7' }
-      - run: gradle -p src/android assembleDebug --no-daemon
+      - run: gradle -p src/android assembleDebug --no-daemon -PversionCode=${{ github.run_number }}
       - uses: actions/upload-artifact@v4
         with: { name: MAS-STORE-apk, path: src/android/app/build/outputs/apk/debug/app-debug.apk }
