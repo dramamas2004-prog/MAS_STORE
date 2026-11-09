@@ -8,10 +8,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: unzip -q "$(ls -t *.zip | head -1)" -d src
+      - name: تجهيز نسخة التطبيق (رقم الإصدار + مكتبة Supabase المحلية)
+        run: |
+          VN="2.0.${{ github.run_number }}"
+          echo "{\"name\":\"$VN\",\"code\":${{ github.run_number }}}" > src/android/app/src/main/assets/www/version.json
+          curl -fsSL https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js -o src/android/app/src/main/assets/www/supabase.js || echo "تعذر التنزيل: سيتم استخدام CDN"
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: '17' }
       - uses: gradle/actions/setup-gradle@v3
         with: { gradle-version: '8.7' }
-      - run: gradle -p src/android assembleDebug --no-daemon -PversionCode=${{ github.run_number }}
+      - run: gradle -p src/android assembleDebug --no-daemon -PversionCode=${{ github.run_number }} -PversionName=2.0.${{ github.run_number }}
       - uses: actions/upload-artifact@v4
         with: { name: MAS-STORE-apk, path: src/android/app/build/outputs/apk/debug/app-debug.apk }
