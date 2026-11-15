@@ -13,6 +13,20 @@ jobs:
           VN="2.0.${{ github.run_number }}"
           echo "{\"name\":\"$VN\",\"code\":${{ github.run_number }}}" > src/android/app/src/main/assets/www/version.json
           curl -fsSL https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js -o src/android/app/src/main/assets/www/supabase.js || echo "تعذر التنزيل: سيتم استخدام CDN"
+      - name: إصلاح تنسيق إعدادات Supabase
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          config = Path("src/android/app/src/main/java/com/mas/store/SupabaseConfig.kt")
+          text = config.read_text()
+          for name in ("URL", "ANON_KEY"):
+              pattern = r'(const\s+val\s+' + name + r'\s*=\s*")\s*(.*?)\s*(")'
+              text, count = re.subn(pattern, lambda match: match.group(1) + match.group(2).strip() + match.group(3), text, count=1, flags=re.S)
+              if count != 1:
+                  raise SystemExit(f"تعذر تنسيق القيمة {name} في {config}")
+          config.write_text(text)
+          PY
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: '17' }
       - uses: gradle/actions/setup-gradle@v3
